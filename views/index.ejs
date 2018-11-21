@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.49.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.49.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="/javascripts/script.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="title col-12">
+          <h1><b><%= title %></b></h1>
+        </div>
+      </div>
+      <div class="row">
+        <div id="sidebar" class="col-4">
+          <h2>Nastavenie mapy</h2>
+          <p>Kliknite na mapu pre nastavenie koordinátov</p>
+          <label for="coordinates"><b>Koordináty:</b></label>
+            <input type="number" step='0.01' class="form-control coords-input" id="coordinate_x" placeholder="x" disabled>
+            <input type="number" step='0.01' class="form-control coords-input" id="coordinate_y" placeholder="y" disabled>
+          <label for="radius"><b>Vzdialenosť v metroch:</b></label>
+          <input type="number" step='100' class="form-control radius-input" id="radius" placeholder="m">
+          <h5>Chcem zobraziť:</h5>
+          <div class="custom-control custom-checkbox to-show">
+            <input type="checkbox" class="custom-control-input" id="monuments" checked>
+            <label class="custom-control-label" for="monuments">Monumenty</label>
+          </div>
+          <div class="custom-control custom-checkbox to-show">
+            <input type="checkbox" class="custom-control-input" id="buildings" checked>
+            <label class="custom-control-label" for="buildings">Budovy</label>
+          </div>
+          <p id="checkbox-error" class="error-message"></p>
+          <button id="show" type="button" class="btn btn-primary" disabled>Zobraziť</button>
+          <p><b>Kliknutím na pamiatku ju odstránite z okruhu</b></p>
+          <p id="opt-visit-label" hidden>Po ceste chcem navštíviť:</p>
+          <div class="custom-control custom-checkbox opt-visit" hidden>
+            <input type="checkbox" class="custom-control-input" id="restaurants">
+            <label class="custom-control-label" for="restaurants">Reštauráciu</label>
+          </div>
+          <div class="custom-control custom-checkbox opt-visit" hidden>
+            <input type="checkbox" class="custom-control-input" id="pubs">
+            <label class="custom-control-label" for="pubs">Bar</label>
+          </div>
+          <div class="custom-control custom-checkbox opt-visit" hidden>
+            <input type="checkbox" class="custom-control-input" id="cafes">
+            <label class="custom-control-label" for="cafes">Kaviareň</label>
+          </div>
+          <div class="custom-control custom-checkbox opt-visit" hidden>
+            <input type="checkbox" class="custom-control-input" id="atms">
+            <label class="custom-control-label" for="atms">Bankomat</label>
+          </div>
+          <button id="route" type="button" class="btn btn-primary" hidden>Nájsť trasu</button>
+          <div id="loader" class="loader" hidden></div>
+          <div class=legend>
+              <h4>Legenda:</h4>
+              <div class="legend-item">
+                <img src="/images/user-marker.png" alt="User Marker" height="42" width="42">
+                <p class="legend-label"> - Používateľ</p>
+              </div>
+              <div class="legend-item">
+                <img src="/images/monument-15.svg" alt="Monument" width="35" height="35">
+                <p class="legend-label"> - Monument</p>
+              </div>
+              <div class="legend-item">
+                <img src="/images/town-hall-15.svg" alt="Building" width="35" height="35">
+                <p class="legend-label"> - Budova</p>
+              </div>
+              <div class="legend-item">
+                <img src="/images/red_route.png" alt="Red route" width="35" height="35">
+                <img src="/images/blue_route.png" alt="Blue route" width="35" height="35">
+                <p class="legend-label"> - Cesty medzi pamiatkami</p>
+              </div>
+          </div>
+        </div>
+        <div id='map' class="col-8"></div>
+      </div>
+    </div>
+    <script>
+      mapboxgl.accessToken = 'pk.eyJ1IjoibWl4byIsImEiOiJjam1wY3l3YmIxZTFnM2ttbHl4YWN4a2t5In0.NEHfDG4Yh8QlK0NyS2i9kw';
+      mapboxgl.setRTLTextPlugin('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.0/mapbox-gl-rtl-text.js');
+      var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v9',
+        center: [17.104338, 48.146382],
+        zoom: 14
+      });
+      map.on('load', function () {
+        map.addLayer({
+        'id': '3d-buildings',
+        'source': 'composite',
+        'source-layer': 'building',
+        'filter': ['==', 'extrude', 'true'],
+        'type': 'fill-extrusion',
+        'minzoom': 15,
+        'paint': {
+            'fill-extrusion-color': '#aaa',
+
+            'fill-extrusion-height': [
+                "interpolate", ["linear"], ["zoom"],
+                15, 0,
+                15.05, ["get", "height"]
+            ],
+            'fill-extrusion-base': [
+                "interpolate", ["linear"], ["zoom"],
+                15, 0,
+                15.05, ["get", "min_height"]
+            ],
+            'fill-extrusion-opacity': .6
+        }
+        });
+
+        map.on('click', function (e) {
+            if (map.getCanvas().classList.contains("canvas-cursor-remove")){
+              return;
+            }
+            document.getElementById('coordinate_x').value = e.lngLat.lng;
+            document.getElementById('coordinate_y').value = e.lngLat.lat;
+            makeMarker(e);
+            checkShowButton();
+        });
+
+        map.on('mouseenter', 'points_of_interest', function () {
+          map.getCanvas().classList.add("canvas-cursor-remove");
+        });
+
+        map.on('mouseleave', 'points_of_interest', function () {
+          map.getCanvas().classList.remove("canvas-cursor-remove");
+        });
+
+        map.on('click', 'points_of_interest', function (e) {
+          unvisited.push(e.features[0].properties.title);
+          filter = ['!in', 'title'].concat(unvisited);
+          map.setFilter('points_of_interest', filter);
+        });
+    });
+
+    var unvisited = [" "];
+
+    $("#radius").focusout(function() {
+      checkShowButton();
+    })
+
+    function checkShowButton(){
+      if (document.getElementById('radius').value > 0 && document.getElementById('user-marker') !== null){
+        $("#show").prop('disabled',false);
+        $("#route").prop('hidden',false);
+        $("#opt-visit-label").prop('hidden',false);
+        $("#restaurants").parent().prop('hidden',false);
+        $("#pubs").parent().prop('hidden',false);
+        $("#cafes").parent().prop('hidden',false);
+        $("#atms").parent().prop('hidden',false);
+      }
+      else {
+        $("#show").prop('disabled',true);
+        $("#route").prop('hidden',true);
+        $("#opt-visit-label").prop('hidden',true);
+        $("#restaurants").parent().prop('hidden',true);
+        $("#pubs").parent().prop('hidden',true);
+        $("#cafes").parent().prop('hidden',true);
+        $("#atms").parent().prop('hidden',true);
+      }
+    }
+
+    function makeMarker(e){
+      marker = document.getElementById('user-marker')
+      if (marker !== undefined && marker !== null){
+        marker.remove();
+      }
+      var el = document.createElement('div');
+      el.setAttribute("id", "user-marker");
+      el.className = 'user-marker';
+
+      new mapboxgl.Marker(el)
+      .setLngLat(e.lngLat)
+      .addTo(map);
+    }
+    </script>
+  </body>
+</html>

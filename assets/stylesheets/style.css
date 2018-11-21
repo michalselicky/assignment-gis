@@ -1,0 +1,103 @@
+body {
+  padding-top: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.title{
+  text-align: center;
+  background-image: url('../images/tourism.png');
+  background-repeat: no-repeat;
+  background-size: 200px 100px;
+}
+
+#map {
+  height: 720px;
+}
+
+#sidebar {
+  background-color: #F2F2F2;
+  padding-top: 10px;
+}
+
+.coords-input {
+  width: 33%;
+  display: inline-block;
+}
+
+.radius-input {
+  width: 45%;
+  display: inline-block;
+}
+
+.btn-primary {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+#route {
+  display: inline-block;
+}
+
+.user-marker {
+  background-image: url('../images/user-marker.png');
+  background-size: cover;
+  width: 40px;
+  height: 40px;
+  margin-left: 15px;
+}
+
+.legend-label {
+  display: inline-block;
+}
+
+.loader {
+    display: inline-flex;
+    margin-left: 10px;
+    border: 30px solid #f3f3f3;
+    border-top: 30px solid #4264FB;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.clear {
+  clear: both;
+}
+
+h5 {
+  margin-top: 10px;
+}
+
+.legend {
+  position: absolute;
+  bottom: 0;
+  margin-bottom: 10px;
+}
+
+.legend-item {
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.error-message {
+  color: #BB0606;
+}
+
+.custom-control-label {
+  padding-top: 4px;
+}
+
+.canvas-cursor-remove {
+  cursor: url('../images/remove-icon.png') 10 10, auto;
+}
