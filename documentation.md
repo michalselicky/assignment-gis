@@ -8,7 +8,7 @@ This application shows historical object on a map near user marker. After showin
 
 How does it look like:
 
-![SmartRouter](app_screenshot.png)
+![SmartRouter](screenshot.png)
 
 The application has 2 separate parts, the client which is a frontend web application using mapboxGL API and mapbox-gl.js and the backend application written in JavaScript ([node.js](https://nodejs.org/en/)), backed by PostGIS. The frontend application communicates with backend via AJAX calls.
 
